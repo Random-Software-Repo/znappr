@@ -13,13 +13,13 @@ will be ignored.
 
 ## Building:
 ### Prerequisites:
-  Rust 1.63 or newer
-  Both the znappr and printwrap repos from random-software-repo:
+-  Rust 1.63 or newer
+-  Both the znappr and printwrap repos from random-software-repo:
 ```
 git clone https://www.github.com/Random-Software-Repo/znappr
 git clone https://www.github.com/Random-Software-Repo/printwrap
 ````
-  Gnu Make (make on most if not all linux distrobutions, gmake on FreeBSD)
+-  Gnu Make (make on most if not all linux distrobutions, gmake on FreeBSD)
      
 ### To compile:
   Run `make build` or `cargo build --release`
@@ -39,7 +39,7 @@ A typical cron entry might look like this:
 ```
 */15  *  *  *  *    /usr/local/bin/znappr -f /path/to/znappr.json
 ```
-To make znappr use UTC rather than the local time zone, invoke thusly:
+To make znappr use UTC rather than the local time zone, add TZ=UTC before the command:
 ```
 */15  *  *  *  *    TZ=UTC /usr/local/bin/znappr -f /path/to/znappr.json
 ```
