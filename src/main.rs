@@ -599,36 +599,44 @@ fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&Strin
 
 	let formatted_date = format!("{}", date_time.format(date_format));
 	let tag = format!("{}{}{}",prefix, formatted_date, postfix);
-	let snapshot_label = format!("{}@{}", dataset, tag);
-	let command_line = format!("zfs snapshot \"{}\"", snapshot_label);
-	info!("Take Snapshot \"{}\"", snapshot_label);
-	debug!("\t\tSnapshot Command Line:\"{}\"",command_line);
-	let result_of_snapshot = if recursive
-		{
-			Command::new("zfs")
-				.arg("snapshot")
-				.arg("-r")
-				.arg(snapshot_label)
-				.output()
-				.expect("failed to execute process")
-		}
-		else
-		{
-			Command::new("zfs")
-				.arg("snapshot")
-				.arg(snapshot_label)
-				.output()
-				.expect("failed to execute process")
-		};
-	let return_code = result_of_snapshot.status;
-	if !return_code.success()
+	if tag.len() <= 0
 	{
-		error!("Error making snapshot:");
-		error!("stderr: {}", String::from_utf8_lossy(&result_of_snapshot.stderr))
+		error!("Snapshot tag is an empty string \"\". Can't take that snapshot. Change the prefix, postfix, or date fields for this job to something not-empty.");
+
 	}
 	else
 	{
-		info!("Snapshot taken!");
+		let snapshot_label = format!("{}@{}", dataset, tag);
+		let command_line = format!("zfs snapshot \"{}\"", snapshot_label);
+		info!("Take Snapshot \"{}\"", snapshot_label);
+		debug!("\t\tSnapshot Command Line:\"{}\"",command_line);
+		let result_of_snapshot = if recursive
+			{
+				Command::new("zfs")
+					.arg("snapshot")
+					.arg("-r")
+					.arg(snapshot_label)
+					.output()
+					.expect("failed to execute process")
+			}
+			else
+			{
+				Command::new("zfs")
+					.arg("snapshot")
+					.arg(snapshot_label)
+					.output()
+					.expect("failed to execute process")
+			};
+		let return_code = result_of_snapshot.status;
+		if !return_code.success()
+		{
+			error!("Error making snapshot:");
+			error!("stderr: {}", String::from_utf8_lossy(&result_of_snapshot.stderr))
+		}
+		else
+		{
+			info!("Snapshot taken!");
+		}
 	}
 }
 
