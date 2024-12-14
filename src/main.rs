@@ -249,13 +249,13 @@ fn walk(znappr:&Znappr)
 		println!("Prefix:\"{}\"",i.prefix);
 		if !adfix_is_valid(i.prefix.as_str())
 		{
-			println!("Prefix is not valid! No snapshot for this job will ever be made.");
+			println!("Prefix is not valid! Only alpha-numeric, white-space, '.', '_', or '-' are allowed. No snapshot for this job will ever be made.");
 			process::exit(3);
 		}
 		println!("Postfix:\"{}\"",i.postfix);
 		if !adfix_is_valid(i.postfix.as_str())
 		{
-			println!("Postfix is not valid! No snapshot for this job will ever be made.");
+			println!("Postfix is not valid! Only alpha-numeric, white-space, '.', '_', or '-' are allowed. No snapshot for this job will ever be made.");
 			process::exit(3);
 		}
 		println!("Date_format:\"{}\"",i.date_format);
@@ -442,6 +442,18 @@ fn get_home() -> String
 {
 	return get_filesystem(" \\/home$")
 }
+
+fn does_dataset_exist(dataset:&str) -> bool
+{
+	let pattern = dataset.replace("/", "\\/");
+	let ds = get_filesystem(pattern.as_str());
+	if ds.len()==0
+	{
+		return false
+	}
+	return true
+}
+
 fn get_filesystem(pattern:&str) -> String
 {
 	debug!("zfs list -t filesystem -o name,mountpoint");
@@ -465,8 +477,12 @@ fn get_filesystem(pattern:&str) -> String
 			.unwrap();
 
 	let stdout = String::from_utf8(filesystem_grep.stdout).unwrap();
-	let mut parts = stdout.split_whitespace();
-	return String::from(parts.next().unwrap());
+	if stdout.len() > 0
+	{
+		let mut parts = stdout.split_whitespace();
+		return String::from(parts.next().unwrap())
+	}
+	return String::from("");
 }
 
 fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snapshot>
@@ -687,14 +703,21 @@ fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
 		info!("\tPrefix     :\"{}\"", j.prefix);
 		info!("\tPostfix    :\"{}\"", j.postfix);
 		info!("\tDate Format:\"{}\"", j.date_format);
+
+		if !does_dataset_exist(j.dataset.as_str())
+		{
+			error!("Dataset \"{}\" does not exist. Skipping this job.", j.dataset);
+			continue 'jobs;
+		}
+
 		if !adfix_is_valid(j.prefix.as_str())
 		{
-			error!("\tPREFIX is invalid. Skipping job.");
+			error!("Prefix is not valid! Only alpha-numeric, white-space, '.', '_', or '-' are allowed. Skipping this job.");
 			continue 'jobs;
 		}
 		if !adfix_is_valid(j.postfix.as_str())
 		{
-			error!("\tPOSTFIX is invalid. Skipping job.");
+			error!("Postfix is not valid! Only alpha-numeric, white-space, '.', '_', or '-' are allowed. Skipping this job.");
 			continue 'jobs;
 		}
 		for w in &j.whens
