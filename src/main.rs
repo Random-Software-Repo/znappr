@@ -588,7 +588,7 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 }
 
 fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&String, date_format:&String, pre_date:bool,
-				year:i32, yearx:i32, month:u32, monthx:u32, day:u32, dayx:u32, hour:u32, minute:u32)
+				year:i32, yearx:i32, month:u32, monthx:u32, day:u32, dayx:u32, hour:u32, minute:u32) -> bool
 {
 	debug!("RUN JOB:");
 	let mut date_time = Local.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap();
@@ -598,46 +598,50 @@ fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&Strin
 	}
 
 	let formatted_date = format!("{}", date_time.format(date_format));
+	if formatted_date == String::from(date_format)
+	{
+		error!("The date_format field (\"{}\") is a constant. That is, it doesn't produce a formatted date, but a fixed string. This would result in all snapshots having the same tag. That isn't correct. Change the date_format field for this job.", date_format);
+		return false;
+	}
 	let tag = format!("{}{}{}",prefix, formatted_date, postfix);
 	if tag.len() <= 0
 	{
 		error!("Snapshot tag is an empty string \"\". Can't take that snapshot. Change the prefix, postfix, or date fields for this job to something not-empty.");
-
+		return false;
 	}
-	else
-	{
-		let snapshot_label = format!("{}@{}", dataset, tag);
-		let command_line = format!("zfs snapshot \"{}\"", snapshot_label);
-		info!("Take Snapshot \"{}\"", snapshot_label);
-		debug!("\t\tSnapshot Command Line:\"{}\"",command_line);
-		let result_of_snapshot = if recursive
-			{
-				Command::new("zfs")
-					.arg("snapshot")
-					.arg("-r")
-					.arg(snapshot_label)
-					.output()
-					.expect("failed to execute process")
-			}
-			else
-			{
-				Command::new("zfs")
-					.arg("snapshot")
-					.arg(snapshot_label)
-					.output()
-					.expect("failed to execute process")
-			};
-		let return_code = result_of_snapshot.status;
-		if !return_code.success()
+	let snapshot_label = format!("{}@{}", dataset, tag);
+	let command_line = format!("zfs snapshot \"{}\"", snapshot_label);
+	info!("Take Snapshot \"{}\"", snapshot_label);
+	debug!("\t\tSnapshot Command Line:\"{}\"",command_line);
+	let result_of_snapshot = if recursive
 		{
-			error!("Error making snapshot:");
-			error!("stderr: {}", String::from_utf8_lossy(&result_of_snapshot.stderr))
+			Command::new("zfs")
+				.arg("snapshot")
+				.arg("-r")
+				.arg(snapshot_label)
+				.output()
+				.expect("failed to execute process")
 		}
 		else
 		{
-			info!("Snapshot taken!");
-		}
+			Command::new("zfs")
+				.arg("snapshot")
+				.arg(snapshot_label)
+				.output()
+				.expect("failed to execute process")
+		};
+	let return_code = result_of_snapshot.status;
+	if !return_code.success()
+	{
+		error!("Error making snapshot:");
+		error!("stderr: {}", String::from_utf8_lossy(&result_of_snapshot.stderr));
+		return false;
 	}
+	else
+	{
+		info!("Snapshot taken!");
+	}
+	return true;
 }
 
 fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
@@ -742,7 +746,7 @@ fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
 			jobs_run = jobs_run +1;
 			take_snapshot(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.date_format, j.pre_date,
 				year, yearx, month, monthx, day, dayx, hour, minute);
-			// purging happens ONLY if the job ran
+			// purging happens ONLY if the job ran, but doesn't care if take_snapshot was successful or not.
 			purge_snapshots(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.purge_rule.unit, &j.purge_rule.value, seconds);
 		}
 		else
