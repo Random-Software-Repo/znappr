@@ -92,6 +92,7 @@ fn config_format()
 	printwrap::print_wrap(5,58,"                                                       NOTE: When snapshots of child datasets are purged (see purge_rule below) the creation dates and counts of those snapshots are made at the parent level. If manual deletion of snapshots are made, the calculations for which snapshots should be delted will be affected.");
 	printwrap::print_wrap(5,53,"        \"prefix\": \"QUARTER__\",                       This is prepended to the beginning of each snapshot. This is used to easily distinguish snapshots made by different snapshot jobs. The Prefix can *ONLY* be unicode alphabetic, unicode numeric (https://www.unicode.org/reports/tr44) or ascii dot (.), underscore (_) or hypen (-).");
 	printwrap::print_wrap(5,53,"        \"postfix\": \"_NOT_REQUIRED\",                  This will be appended to the end of each snapshot. This is for additional infomational purposes as you desire. The Postfix can *ONLY* be unicode alphabetic, unicode numeric (see below) or ascii dot (.), underscore (_) or hypen (-).");
+	printwrap::print_wrap(5,53,"                                                     NOTE: If both \"prefix\" and \"postfix\" are empty strings, then snapshot purges for this dataset will match *all* snapshots. This may result in unintended purging of snapshots from other sources. At least \"prefix\" should have a unique value.");
 	printwrap::print_wrap(5,53,"        \"date_format\":\"%Y-%m-%d-%H:%M\",              Snapshot date format. Each snapshot will be tagged with the prefix + a date + postfix. The format of the date portion is specified here. This value must be compatible with rust's chrono::format (see below). There is no \"default\", but a good default value to use is: \"%Y-%m-%d-%H:%M\" The date will be in the local time zone unless znappr is started with a different timezone. On Linux and FreeBSD (at least) znappr can be started using UTC by prepending \"TZ=UTC\" before the znappr command. example:");
 	printwrap::print_wrap(5,53,"                                                             TZ=UTC znappr [options...]");
 	printwrap::print_wrap(5,53,"            pre_date: false,                         Predate is unusual. If predate is false, formatting of the snapshot's label's date portion will look exactly as anyone would expect. If pre_date is true, the date portion will be quite different: the date used for the tag will be the current date-time minus 1 hour. The time portion of this altered date will always be 00:00. This oddity is useful when a snapshot is made at midnight but the \"display\" date should be the previous day, such as an end-of-day/week/month/year snapshot. For example, a snapshot made at the end of the year 2025, scheduled to run at midnight would likely have a date of 2026-01-01, which might not be what one would want if human readability is valued. With ");
@@ -488,6 +489,7 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 			.expect("failed to execute process");
 	let snapshot_list_out = snapshot_list.stdout.expect("Failed to open zfs list stdout");
 	let grep_pattern = format!("{}@{}.*{}",dataset,prefix,postfix);
+	trace!("Purge matching \"{}\"", grep_pattern);
 	let snapshot_grep = Command::new("grep")
 			.arg(grep_pattern)
 			.stdin(Stdio::from(snapshot_list_out))
@@ -511,11 +513,15 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 	return snapshots
 }
 
-fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&String, purge_rule:&String, purge_value:&String, systemtime:i64)
+fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&String, purge_rule:&String, purge_value:&String, systemtime:i64) -> u32
 {
 	info!("\tPurge {}", dataset);
-	let mut snapshots_deleted = 0;
+	let mut snapshots_deleted = 0 as u32;
 	let mut snapshots = get_snapshots(dataset, prefix, postfix);
+	if (prefix=="") && (postfix == "")
+	{
+		error!("Prefix and Postfix are both empty string. Purging will match ALL snapshots for \"{}\"", dataset);
+	}
 	let snapshot_count:u32 = snapshots.len() as u32; // snapshot len cannot plausibly exceed u32.
 	match purge_rule.as_str()
 	{
@@ -585,6 +591,7 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 			},
 	}
 	info!("Snapshots deleted: {}", snapshots_deleted);
+	return snapshots_deleted;
 }
 
 fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&String, date_format:&String, pre_date:bool,
