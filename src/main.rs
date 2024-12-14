@@ -554,7 +554,10 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 						//let snapshot_to_delete = vlines.pop().unwrap();
 						let snapshot_to_delete:Snapshot = snapshots.pop().unwrap();
 						info!("Deleting snapshot {} of {}:\"{}\"", d, delete_count, snapshot_to_delete.snapshot);
-						delete_snapshot(&snapshot_to_delete.snapshot, recursive);
+						if delete_snapshot(&snapshot_to_delete.snapshot, recursive)
+						{
+							snapshots_deleted = snapshots_deleted +1;
+						}
 					}
 				}
 			},
