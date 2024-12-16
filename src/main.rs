@@ -48,7 +48,6 @@ fn usage()
 	printwrap::print_wrap(5,0,"\tznappr [options]");
 	printwrap::print_wrap(5,0,"Options:");
 	printwrap::print_wrap(5,24,"    -f <config file>    Load the specified JSON config file. The default config file is loaded from: /usr/local/etc/znappr/znappr.json");
-	printwrap::print_wrap(5,24,"    -s | --stdout       Log messages to stdout rather than syslog.");
 	printwrap::print_wrap(5,24,"    -c | --configtest   Validate the config json file then exit.");
 	printwrap::print_wrap(5,24,"    -h | --help         Print this usage information and exit.");
 	printwrap::print_wrap(5,24,"    -j                  Prints an extended explanation of znappr's json configuration file format. This will not be legible on terminals less than 100 characters wide.");
@@ -60,10 +59,12 @@ fn usage()
 	printwrap::print_wrap(5,0,"");
 	printwrap::print_wrap(5,0,"When znappr purges snapshots, only snapshots of the specific dataset for each job which match the labels specified for that job will be destroyed. Any other snapshots (created by other jobs, other programs, or manually) will be ignored.");
 	printwrap::print_wrap(5,0,"");
+	printwrap::print_wrap(5,0,"All znappr logging is to stdout.");
+	printwrap::print_wrap(5,0,"");
 	printwrap::print_wrap(5,0,"Znappr is intended to be run via cron. When running from cron, the frequency znappr is run should correspond to the most frequent job specified in the configuration file. Usually once every 10 or 15 minutes should be sufficient. Once per hour will be enough if no jobs require more. A typical cron line might look like this:");
-	printwrap::print_wrap(5,0,"    */15  *  *  *  *    /usr/local/bin/znappr -f /path/to/znappr.json");
+	printwrap::print_wrap(5,0,"    */15  *  *  *  *    /usr/local/bin/znappr -f /path/to/znappr.json >> /var/log/znappr.log 2>&1");
 	printwrap::print_wrap(5,0,"To make znappr use UTC rather than the local time zone, invoke thusly:");
-	printwrap::print_wrap(5,0,"    */15  *  *  *  *    TZ=UTC /usr/local/bin/znappr -f /path/to/znappr.json");
+	printwrap::print_wrap(5,0,"    */15  *  *  *  *    TZ=UTC /usr/local/bin/znappr -f /path/to/znappr.json >> /var/log/znappr.log 2>&1");
 	printwrap::print_wrap(5,0,"");
 	process::exit(1);
 
