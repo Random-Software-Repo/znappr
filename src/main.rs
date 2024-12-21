@@ -222,8 +222,16 @@ fn load_config(file_path: &str) -> Znappr
 
 
 	let json_file_path = Path::new(file_path);
-	let file = File::open(json_file_path).expect("file not found");
-	let znappr=serde_json::from_reader(file).expect("error while reading");
+	let file = match File::open(json_file_path) 
+	{
+		Err(error) => {error!("Could not open file \"{}\"\n{}", file_path,error);process::exit(1)},
+		Ok(file) => file,
+	};
+	let znappr= match serde_json::from_reader(file)
+	{
+		Err(error) => {error!("Error reading file \"{}\"\n{}",file_path, error);process::exit(3)},
+		Ok(znappr) => znappr,
+	};
 	return znappr;
 }
 
