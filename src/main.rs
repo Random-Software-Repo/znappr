@@ -411,20 +411,28 @@ fn delete_snapshot(snapshot:&String, recursive:bool) -> bool
 	debug!("{}",full_command);
 	let result_of_snapshot_delete =	if recursive
 		{
-			Command::new("zfs")
+			let cmd = match Command::new("zfs")
 				.arg("destroy")
 				.arg("-r")
 				.arg(snapshot)
 				.output()
-				.expect("failed to execute process")
+				{
+					Err(error) => {error!("Failed to run \"zfs destroy -r {}\" process:{}",snapshot, error);return false},
+					Ok(cmd) => cmd
+				};
+				cmd
 		}
 		else
 		{
-			Command::new("zfs")
+			let cmd = match Command::new("zfs")
 				.arg("destroy")
 				.arg(snapshot)
 				.output()
-				.expect("failed to execute process")
+				{
+					Err(error) => {error!("Failed to run \"zfs destroy {}\" process:{}",snapshot,error);return false},
+					Ok(cmd) => cmd
+				};
+				cmd
 		};
 	let return_code = result_of_snapshot_delete.status;
 	let stdout = String::from_utf8(result_of_snapshot_delete.stdout).unwrap();
@@ -465,8 +473,9 @@ fn does_dataset_exist(dataset:&str) -> bool
 
 fn get_filesystem(pattern:&str) -> String
 {
+	let error_value= String::from("");
 	debug!("zfs list -t filesystem -o name,mountpoint");
-	let filesystem_list = Command::new("zfs")
+	let filesystem_list = match Command::new("zfs")
 			.arg("list")
 			.arg("-t")
 			.arg("filesystem")
@@ -476,29 +485,40 @@ fn get_filesystem(pattern:&str) -> String
 			.arg("createtxg") // orders by createtxg, oldest first so clones won't be selected.
 			.stdout(Stdio::piped())
 			.spawn()
-			.expect("failed to execute process");
-	let filesystem_list_out = filesystem_list.stdout.expect("Failed to open zfs list stdout");
-	let filesystem_grep = Command::new("grep")
+			{
+				Err(error) => {error!("Error listing zfs filesystems:{}",error);return error_value},
+				Ok(filesystem_list) => filesystem_list,
+			};
+	let filesystem_list_out = filesystem_list.stdout.unwrap();// I think this is ok to unwrap and ignore any "problems" as they'd just be empty output
+	let filesystem_grep = match Command::new("grep")
 			.arg(pattern)
 			.stdin(Stdio::from(filesystem_list_out))
 			.stdout(Stdio::piped())
 			.output()
-			.unwrap();
+			{
+				Err(error) => {error!("Error greping zfs filesystems:{}",error);return error_value},
+				Ok(filesystem_grep) => filesystem_grep,
+			};
 
-	let stdout = String::from_utf8(filesystem_grep.stdout).unwrap();
+	let stdout = match String::from_utf8(filesystem_grep.stdout)
+		{
+			Err(error) => {error!("Error converting filesystem list to utf8:{}",error);return error_value},
+			Ok(stdout) => stdout,
+		};
 	if stdout.len() > 0
 	{
 		let mut parts = stdout.split_whitespace();
 		return String::from(parts.next().unwrap())
 	}
-	return String::from("");
+	return error_value;
 }
 
 fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snapshot>
 {
+	let mut snapshots: Vec<Snapshot> = Vec::new();
 	let full_command = format!("zfs list -t snapshot -H | grep '{}@{}.*{}'| sort| awk '{{print $1}}'",dataset,prefix,postfix);
 	debug!("{}",full_command);
-	let snapshot_list = Command::new("zfs")
+	let snapshot_list = match Command::new("zfs")
 			.arg("list")
 			.arg("-t")
 			.arg("snapshot")
@@ -511,20 +531,25 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 			.arg(dataset)
 			.stdout(Stdio::piped())
 			.spawn()
-			.expect("failed to execute process");
-	let snapshot_list_out = snapshot_list.stdout.expect("Failed to open zfs list stdout");
+			{
+				Err(error) => {error!("Error listing snapshots:{}",error);return snapshots},
+				Ok(snapshot_list) => snapshot_list,
+			};
+	let snapshot_list_out = snapshot_list.stdout.unwrap();// I think this is ok to unwrap and pray.//expect("Failed to open zfs list stdout");
 	let grep_pattern = format!("{}@{}.*{}",dataset,prefix,postfix);
 	trace!("Purge matching \"{}\"", grep_pattern);
-	let snapshot_grep = Command::new("grep")
+	let snapshot_grep = match Command::new("grep")
 			.arg(grep_pattern)
 			.stdin(Stdio::from(snapshot_list_out))
 			.stdout(Stdio::piped())
 			.output()
-			.unwrap();
+			{
+				Err(error) => {error!("Error greping snapshots:{}",error);return snapshots},
+				Ok(snapshot_grep) => snapshot_grep,
+			};
 
-	let stdout = String::from_utf8(snapshot_grep.stdout).unwrap();
+	let stdout = String::from_utf8(snapshot_grep.stdout).unwrap();//again, ok to unwrap and pray. maybe.
 	let lines = stdout.lines();
-	let mut snapshots: Vec<Snapshot> = Vec::new();
 	for l in lines
 	{
 		trace!("Snapshot:\"{}\"", l);
@@ -650,20 +675,28 @@ fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&Strin
 	debug!("\t\tSnapshot Command Line:\"{}\"",command_line);
 	let result_of_snapshot = if recursive
 		{
-			Command::new("zfs")
+			let cmd = match Command::new("zfs")
 				.arg("snapshot")
 				.arg("-r")
 				.arg(snapshot_label)
 				.output()
-				.expect("failed to execute process")
+				{
+					Err(error) => {error!("Error in -r \"{}\":{}",command_line,error);return false},
+					Ok(cmd) => cmd,
+				};
+				cmd
 		}
 		else
 		{
-			Command::new("zfs")
+			let cmd = match Command::new("zfs")
 				.arg("snapshot")
 				.arg(snapshot_label)
 				.output()
-				.expect("failed to execute process")
+				{
+					Err(error) => {error!("Error in\"{}\":{}",command_line,error);return false},
+					Ok(cmd) => cmd,
+				};
+				cmd
 		};
 	let return_code = result_of_snapshot.status;
 	if !return_code.success()
@@ -876,7 +909,11 @@ fn main()
 	if parse_fake_date
 	{
 		trace!("Parsing date \"{}\"", fakedate);
-		let fake_today = NaiveDateTime::parse_from_str(fakedate, "%Y-%m-%d-%H:%M").unwrap();
+		let fake_today = match NaiveDateTime::parse_from_str(fakedate, "%Y-%m-%d-%H:%M")
+		{
+			Err(error) => {error!("Error parsing date supplied \"{}\"\n{}",fakedate,error);process::exit(5)},
+			Ok(fake_today) => fake_today,
+		};
 		today = Local.from_local_datetime(&fake_today).unwrap();
 		trace!("Parsed today (from fake date):{}", today);
 	}
