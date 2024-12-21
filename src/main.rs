@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 struct PurgeRule
 {
 	unit: String,
-	value: String
+	value: u32
 }
 #[derive(Serialize, Deserialize)]
 struct When
@@ -180,7 +180,7 @@ fn config_format()
 	printwrap::print_wrap(5,70,"                                                         none         No snapshot purging is done. All snapshots made (for this job) will be kept. The value field must still be present, but is ignored for this case.");
 	printwrap::print_wrap(5,70,"                                                     Any job can only have ONE purge rule.");
 	printwrap::print_wrap(5,53,"            \"unit\":\"count\",                          Keep a specific number of snapshots");
-	printwrap::print_wrap(5,53,"            \"value\":\"72\"                             Where 72 is that number. Once the number of snapshots exceeds the number, older snapshots will be destroyed.");
+	printwrap::print_wrap(5,53,"            \"value\":72                               Where 72 is that number. Once the number of snapshots exceeds the number, older snapshots will be destroyed.");
 	printwrap::print_wrap(5,53,"        }");
 	printwrap::print_wrap(5,53,"    }");
 	printwrap::print_wrap(5,53,"    ,{.... }                                         additional jobs, in the same format.");
@@ -211,7 +211,7 @@ fn print_generic_config()
 		process::exit(4);
 	}
 
-	println!("{{\n\t\"comment\":[\"Znappr configuration.\"],\n\t\"jobs\": [\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots at 15, 30, and 45 minutes past the hour, retain 36 (approx. 12 hours)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"QUARTER__\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": false,\n\t\t\t\"date_format\":\"%Y-%m-%d-%H:%M\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": \"15,30,45\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":\"36\"}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots hourly, retain 48 (approx. 2 days)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"HOUR_____\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": false,\n\t\t\t\"date_format\":\"%Y-%m-%d-%H:00\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": \"0\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":\"48\"}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots daily, retain 8 (approx. 1 week)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"DAY______\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": true,\n\t\t\t\"date_format\":\"%Y-%m-%d\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": \"0\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"0\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":\"8\"}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"ROOT Take snapshots daily, retain 8 (approx. 1 week)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":false,\n\t\t\t\"prefix\": \"DAY______\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": true,\n\t\t\t\"date_format\":\"%Y-%m-%d\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": \"0\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"0\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":\"8\"}}\n\t\t}}\n\t]\n}}\n", home,home,home,root);
+	println!("{{\n\t\"comment\":[\"Znappr configuration.\"],\n\t\"jobs\": [\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots at 15, 30, and 45 minutes past the hour, retain 36 (approx. 12 hours)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"QUARTER__\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": false,\n\t\t\t\"date_format\":\"%Y-%m-%d-%H:%M\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": \"15,30,45\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":36}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots hourly, retain 48 (approx. 2 days)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"HOUR_____\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": false,\n\t\t\t\"date_format\":\"%Y-%m-%d-%H:00\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": 0\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":48}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"HOME Take snapshots daily, retain 8 (approx. 1 week)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":true,\n\t\t\t\"prefix\": \"DAY______\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": true,\n\t\t\t\"date_format\":\"%Y-%m-%d\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": 0\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":0\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":8}}\n\t\t}},\n\t\t{{\n\t\t\t\"comment\": [\"ROOT Take snapshots daily, retain 8 (approx. 1 week)\"],\n\t\t\t\"dataset\": \"{}\",\n\t\t\t\"recursive\":false,\n\t\t\t\"prefix\": \"DAY______\",\n\t\t\t\"postfix\": \"\",\n\t\t\t\"pre_date\": true,\n\t\t\t\"date_format\":\"%Y-%m-%d\",\n\t\t\t\"whens\":\n\t\t\t[\n\t\t\t\t{{\n\t\t\t\t\t\"field\": \"minute\",\n\t\t\t\t\t\"value\": 0\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"hour\",\n\t\t\t\t\t\"value\":0\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_week\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"day_of_year\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}},\n\t\t\t\t{{\n\t\t\t\t\t\"field\":\"month\",\n\t\t\t\t\t\"value\":\"*\"\n\t\t\t\t}}\n\t\t\t],\n\t\t\t\"purge_rule\": {{\"unit\":\"count\", \"value\":8}}\n\t\t}}\n\t]\n}}\n", home,home,home,root);
 
 	process::exit(1);
 }
@@ -563,7 +563,7 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 	return snapshots
 }
 
-fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&String, purge_rule:&String, purge_value:&String, systemtime:i64) -> u32
+fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&String, purge_rule:&String, purge_value:u32, systemtime:i64) -> u32
 {
 	info!("\tPurge {}", dataset);
 	let mut snapshots_deleted = 0 as u32;
@@ -578,7 +578,7 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 		"count" =>
 			{
 				info!("Purge rule \"count\", keep {}", purge_value);
-				let count:u32 = purge_value.parse().unwrap();
+				let count:u32 = purge_value;
 				if count < snapshot_count
 				{
 					let delete_count = snapshot_count - count;
@@ -598,7 +598,7 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 		//minute/hour/day/week/year
 		"minute"|"hour"|"day"|"week"|"year" =>
 			{
-				let count:u32 = purge_value.parse().unwrap();
+				let count:u32 = purge_value;
 				let seconds:u32;
 				info!("Purge rule keep for {} {}", count, purge_rule);
 				match purge_rule.as_str()
@@ -822,7 +822,7 @@ fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
 			take_snapshot(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.date_format, j.pre_date,
 				year, yearx, month, monthx, day, dayx, hour, minute);
 			// purging happens ONLY if the job ran, but doesn't care if take_snapshot was successful or not.
-			purge_snapshots(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.purge_rule.unit, &j.purge_rule.value, seconds);
+			purge_snapshots(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.purge_rule.unit, j.purge_rule.value, seconds);
 		}
 		else
 		{
