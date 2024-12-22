@@ -1,7 +1,7 @@
 extern crate printwrap;
 use std::{process,process::Command,env,fs::File,path::Path, process::Stdio,str};
 use log::*;
-use chrono::{DateTime,Weekday,Local,Datelike,Timelike,Duration,NaiveDateTime,offset::TimeZone};
+use chrono::{DateTime,Weekday,Local,LocalResult,Datelike,Timelike,Duration,NaiveDateTime,offset::TimeZone};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -62,9 +62,9 @@ fn usage()
 	printwrap::print_wrap(5,0,"All znappr logging is to stdout.");
 	printwrap::print_wrap(5,0,"");
 	printwrap::print_wrap(5,0,"Znappr is intended to be run via cron. When running from cron, the frequency znappr is run should correspond to the most frequent job specified in the configuration file. Usually once every 10 or 15 minutes should be sufficient. Once per hour will be enough if no jobs require more. A typical cron line might look like this:");
-	printwrap::print_wrap(5,0,"    */15  *  *  *  *    /usr/local/bin/znappr -f /path/to/znappr.json >> /var/log/znappr.log 2>&1");
+	printwrap::print_wrap(5,0,"    */15  *  *  *  *    /usr/local/bin/znappr -f /path/to/znappr.json &>> /var/log/znappr.log");
 	printwrap::print_wrap(5,0,"To make znappr use UTC rather than the local time zone, invoke thusly:");
-	printwrap::print_wrap(5,0,"    */15  *  *  *  *    TZ=UTC /usr/local/bin/znappr -f /path/to/znappr.json >> /var/log/znappr.log 2>&1");
+	printwrap::print_wrap(5,0,"    */15  *  *  *  *    TZ=UTC /usr/local/bin/znappr -f /path/to/znappr.json &>> /var/log/znappr.log");
 	printwrap::print_wrap(5,0,"");
 	process::exit(1);
 
@@ -316,8 +316,16 @@ fn validate_when_value(value:&str) -> bool
 			{
 				//range
 				// check if number is a range, is "%d-%d", 
-				let first:u32 = range[0].parse().unwrap();
-				let last:u32 = range[1].parse().unwrap();
+				let first:u32 = match range[0].parse()
+					{
+						Err(error) => {error!("first part of when range \"{}\" is invalid:{}",range[0],error);return false},
+						Ok(first) => first,
+					};
+				let last:u32 = match range[1].parse()
+					{
+						Err(error) => {error!("second part of when range \"{}\" is invalid:{}",range[2],error);return false},
+						Ok(last) => last,
+					};
 				if (first <= 1000) && (last <= 1000)
 				{
 					valid=true;
@@ -326,7 +334,11 @@ fn validate_when_value(value:&str) -> bool
 			}
 			else if num_denom.len() == 2
 			{
-				let denominator:u32 = num_denom[1].parse().unwrap();
+				let denominator:u32 = match num_denom[1].parse()
+					{
+						Err(error) => {error!("denominator \"{}\" is invalid:{}",num_denom[1],error);return false},
+						Ok(denominator) => denominator,
+					};
 				if (denominator > 0) && (denominator <= 1000)
 				{
 					valid=true;
@@ -336,7 +348,11 @@ fn validate_when_value(value:&str) -> bool
 			else
 			{
 				// single value
-				let test_number: u32 = p.parse().unwrap();
+				let test_number: u32 = match p.parse()
+					{
+						Err(error) => {error!("when value \"{}\" is invalid:{}",p,error);return false},
+						Ok(test_number) => test_number,
+					};
 				if test_number <= 1000
 				{
 					valid=true;
@@ -372,8 +388,16 @@ fn check_values(value:&str, time_part:u32) -> bool
 			{
 				//range
 				// check if number is a range, is "%d-%d", 
-				let first:u32 = range[0].parse().unwrap();
-				let last:u32 = range[1].parse().unwrap();
+				let first:u32 = match range[0].parse()
+					{
+						Err(error) => {error!("first part of when range \"{}\" is invalid:{}",range[0],error);return false},
+						Ok(first) => first,
+					};
+				let last:u32 = match range[1].parse()
+					{
+						Err(error) => {error!("second part of when range \"{}\" is invalid:{}",range[2],error);return false},
+						Ok(last) => last,
+					};
 				if (time_part >= first) && (time_part <= last)
 				{
 					matched=true;
@@ -382,7 +406,11 @@ fn check_values(value:&str, time_part:u32) -> bool
 			}
 			else if num_denom.len() == 2
 			{
-				let denominator:u32 = num_denom[1].parse().unwrap();
+				let denominator:u32 = match num_denom[1].parse()
+					{
+						Err(error) => {error!("denominator \"{}\" is invalid:{}",num_denom[1],error);return false},
+						Ok(denominator) => denominator,
+					};
 				if (time_part % denominator) == 0
 				{
 					matched=true;
@@ -392,7 +420,11 @@ fn check_values(value:&str, time_part:u32) -> bool
 			else
 			{
 				// single value
-				let test_number: u32 = p.parse().unwrap();
+				let test_number: u32 = match p.parse()
+					{
+						Err(error) => {error!("when value \"{}\" is invalid:{}",p,error);return false},
+						Ok(test_number) => test_number,
+					};
 				if test_number == time_part
 				{
 					matched=true;
@@ -435,7 +467,11 @@ fn delete_snapshot(snapshot:&String, recursive:bool) -> bool
 				cmd
 		};
 	let return_code = result_of_snapshot_delete.status;
-	let stdout = String::from_utf8(result_of_snapshot_delete.stdout).unwrap();
+	let stdout = match String::from_utf8(result_of_snapshot_delete.stdout)
+		{
+			Err(e)=> {error!("Error converting stdout to utf8 string. Snapshot may already be deleted, though\n{}.",e);String::from("")},
+			Ok(stdout)=>stdout,
+		};
 
 	trace!("{}", stdout);
 	if !return_code.success()
@@ -489,7 +525,13 @@ fn get_filesystem(pattern:&str) -> String
 				Err(error) => {error!("Error listing zfs filesystems:{}",error);return error_value},
 				Ok(filesystem_list) => filesystem_list,
 			};
-	let filesystem_list_out = filesystem_list.stdout.unwrap();// I think this is ok to unwrap and ignore any "problems" as they'd just be empty output
+
+	let filesystem_list_out = match filesystem_list.stdout
+			{
+				Some(f) => f,
+				None => {error!("No output from get_filesytem");return error_value}
+			};
+
 	let filesystem_grep = match Command::new("grep")
 			.arg(pattern)
 			.stdin(Stdio::from(filesystem_list_out))
@@ -508,7 +550,12 @@ fn get_filesystem(pattern:&str) -> String
 	if stdout.len() > 0
 	{
 		let mut parts = stdout.split_whitespace();
-		return String::from(parts.next().unwrap())
+		let part = match parts.next()
+							{
+								Some(s)=> s,
+								None=>"",
+							};
+		return String::from( part )
 	}
 	return error_value;
 }
@@ -535,7 +582,12 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 				Err(error) => {error!("Error listing snapshots:{}",error);return snapshots},
 				Ok(snapshot_list) => snapshot_list,
 			};
-	let snapshot_list_out = snapshot_list.stdout.unwrap();// I think this is ok to unwrap and pray.//expect("Failed to open zfs list stdout");
+	let snapshot_list_out = match snapshot_list.stdout
+			{
+				Some(f) => f,
+				None => {error!("No output from get_snapshots");return snapshots}
+			};
+
 	let grep_pattern = format!("{}@{}.*{}",dataset,prefix,postfix);
 	trace!("Purge matching \"{}\"", grep_pattern);
 	let snapshot_grep = match Command::new("grep")
@@ -548,7 +600,11 @@ fn get_snapshots(dataset: &String, prefix:&String, postfix:&String) -> Vec<Snaps
 				Ok(snapshot_grep) => snapshot_grep,
 			};
 
-	let stdout = String::from_utf8(snapshot_grep.stdout).unwrap();//again, ok to unwrap and pray. maybe.
+	let stdout = match String::from_utf8(snapshot_grep.stdout)
+			{
+				Ok(f) => f,
+				Err(e) => {error!("Error converting get_snapshot output to utf8 string: {}",e);return snapshots}
+			};
 	let lines = stdout.lines();
 	for l in lines
 	{
@@ -585,8 +641,11 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 					info!("Delete {} snapshots out of {}.", delete_count, snapshot_count);
 					for d in 1..=delete_count
 					{
-						//let snapshot_to_delete = vlines.pop().unwrap();
-						let snapshot_to_delete:Snapshot = snapshots.pop().unwrap();
+						let snapshot_to_delete:Snapshot = match snapshots.pop()
+							{
+								None=> {error!("Snapshots.pop returned None. No snapshot to delete.");continue},
+								Some(s)=> s,
+							};
 						info!("Deleting snapshot {} of {}:\"{}\"", d, delete_count, snapshot_to_delete.snapshot);
 						if delete_snapshot(&snapshot_to_delete.snapshot, recursive)
 						{
@@ -614,7 +673,11 @@ fn purge_snapshots(dataset: &String, recursive:bool, prefix:&String, postfix:&St
 				debug!("Current time {}", systemtime);
 				for snap in snapshots
 				{
-					let snaptime:i64 = snap.date.parse().unwrap();
+					let snaptime:i64 = match snap.date.parse()
+						{
+							Err(error) =>{error!("snap date {}, seems invalid {}", snap.date,error);continue},
+							Ok(snaptime) => snaptime,
+						};
 					let offset = systemtime-snaptime;
 					let purge: bool = {
 						if offset > seconds as i64 
@@ -651,10 +714,20 @@ fn take_snapshot(dataset:&String, recursive:bool, prefix:&String, postfix:&Strin
 				year:i32, yearx:i32, month:u32, monthx:u32, day:u32, dayx:u32, hour:u32, minute:u32) -> bool
 {
 	debug!("RUN JOB:");
-	let mut date_time = Local.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap();
+	let mut date_time = match Local.with_ymd_and_hms(year, month, day, hour, minute, 0)
+			{
+				LocalResult::None => {error!("Failed to create date from {}-{}-{} {}:{}:0",year,month,day,hour,minute);return false},
+				LocalResult::Single(date_time) => date_time,
+				LocalResult::Ambiguous(_date_time1, date_time2) => date_time2,
+			};
 	if pre_date
 	{
-		date_time = Local.with_ymd_and_hms(yearx, monthx, dayx, 0, 0, 0).unwrap();
+		date_time = match Local.with_ymd_and_hms(yearx, monthx, dayx, 0, 0, 0)
+			{
+				LocalResult::None => {error!("Failed to create datex from {}-{}-{} 0:0:0",yearx,monthx,dayx);return false},
+				LocalResult::Single(date_time) => date_time,
+				LocalResult::Ambiguous(_date_time1, date_time2) => date_time2,
+			};
 	}
 
 	let formatted_date = format!("{}", date_time.format(date_format));
@@ -904,7 +977,12 @@ fn main()
 			}
 		}
 	}
-	stderrlog::new().module(module_path!()).verbosity(verbose).init().unwrap();
+
+	match stderrlog::new().module(module_path!()).verbosity(verbose).init()
+	{
+		Err(e) => {println!("Error creating stderrlog:{}",e);process::exit(10)},
+		Ok(l)=>l, // don't need to do anything for this case.
+	};
 
 	if parse_fake_date
 	{
@@ -914,7 +992,12 @@ fn main()
 			Err(error) => {error!("Error parsing date supplied \"{}\"\n{}",fakedate,error);process::exit(5)},
 			Ok(fake_today) => fake_today,
 		};
-		today = Local.from_local_datetime(&fake_today).unwrap();
+		today = match Local.from_local_datetime(&fake_today)
+			{
+				LocalResult::None => {error!("Failed to create fake date from {}",fake_today);process::exit(5)},
+				LocalResult::Single(date_time) => date_time,
+				LocalResult::Ambiguous(_date_time1, date_time2) => date_time2,
+			};
 		trace!("Parsed today (from fake date):{}", today);
 	}
 
