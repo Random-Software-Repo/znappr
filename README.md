@@ -18,7 +18,7 @@ will be ignored.
 ```
 git clone https://www.github.com/Random-Software-Repo/znappr
 git clone https://www.github.com/Random-Software-Repo/printwrap
-````
+```
 -  Gnu Make (make on most if not all linux distrobutions, gmake on FreeBSD)
      
 ### To compile:
