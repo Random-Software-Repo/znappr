@@ -12,20 +12,33 @@ Any other snapshots (created by other jobs, other programs, or manually)
 will be ignored.
 
 ## Building:
+
 ### Prerequisites:
--  Rust 1.63 or newer
--  Both the znappr and printwrap repos from random-software-repo:
-```
-git clone https://www.github.com/Random-Software-Repo/znappr
-git clone https://www.github.com/Random-Software-Repo/printwrap
-```
--  Gnu Make (make on most if not all linux distrobutions, gmake on FreeBSD)
-     
+
+-  You must have a rust toolchain installed prior to building weathr. You can install rust from:
+
+> https://www.rust-lang.org/learn/get-started
+
+-  Gnu Make (`make` on most if not all linux distributions, `gmake` on FreeBSD)
+
 ### To compile:
-  Run `make build` or `cargo build --release`
+
+```
+$ mkdir znappr-src
+$ cd znappr-src
+$ git clone https://www.github.com/Random-Software-Repo/printwrap
+$ git clone https://www.github.com/Random-Software-Repo/znappr
+$ cd znappr
+$ make build
+````
 
 ### To install:
-  Run `sudo make install` or `sudo make install dir=/an/alternate/path/for/znappr`
+
+From the cloned znappr repository:
+
+```
+$ sudo make install
+````
 
 ## Running
 
