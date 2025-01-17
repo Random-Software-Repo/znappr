@@ -846,32 +846,32 @@ fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
 			{
 				"minute" =>
 				{
-					info!("\t\tMINUTE:\"{}\"",w.value);
+					debug!("\t\tMINUTE:\"{}\"",w.value);
 					condition = check_values(&w.value,minute);
 				}
 				"hour" =>
 				{
-					info!("\t\tHOUR \"{}\"", w.value);
+					debug!("\t\tHOUR \"{}\"", w.value);
 					condition = check_values(&w.value,hour);
 				}
 				"day" =>
 				{
-					info!("\t\tDAY \"{}\"", w.value);
+					debug!("\t\tDAY \"{}\"", w.value);
 					condition = check_values(&w.value,day);
 				}
 				"day_of_week" =>
 				{
-					info!("\t\tDAY_OF_WEEK \"{}\"", w.value);
+					debug!("\t\tDAY_OF_WEEK \"{}\"", w.value);
 					condition = check_values(&w.value,dayofweek);
 				}
 				"day_of_year" =>
 				{
-					info!("\t\tDAY_OF_YEAR \"{}\"", w.value);
+					debug!("\t\tDAY_OF_YEAR \"{}\"", w.value);
 					condition = check_values(&w.value,dayofyear);
 				}
 				"month" =>
 				{
-					info!("\t\tMONTH \"{}\"", w.value);
+					debug!("\t\tMONTH \"{}\"", w.value);
 					condition = check_values(&w.value,month);
 				}
 				_ =>
@@ -882,15 +882,16 @@ fn process_jobs(znappr:&Znappr, today:DateTime<Local>)
 			runjob = runjob & condition;
 			if condition
 			{
-				info!("\t\tMATCHED");
+				debug!("\t\tMATCHED");
 			}
 			else
 			{
-				info!("\t\tNOT MATCHED");
+				debug!("\t\tNOT MATCHED");
 			}
 		}
 		if runjob
 		{
+			info!("\t\tRUN JOB");
 			jobs_run = jobs_run +1;
 			take_snapshot(&j.dataset, j.recursive, &j.prefix, &j.postfix, &j.date_format, j.pre_date,
 				year, yearx, month, monthx, day, dayx, hour, minute);
@@ -984,6 +985,9 @@ fn main()
 		Ok(l)=>l, // don't need to do anything for this case.
 	};
 
+	info!("***************************************");
+	info!("znappr starting at {}",Local::now());
+
 	if parse_fake_date
 	{
 		trace!("Parsing date \"{}\"", fakedate);
@@ -1007,6 +1011,7 @@ fn main()
 		walk(&znappr);
 		process::exit(2);
 	}
-	process_jobs(&znappr, today)
+	process_jobs(&znappr, today);
+	info!("znappr ending at {}",Local::now());
 }
 
