@@ -1,0 +1,93 @@
+{
+	"comment":["Znappr configuration for HYPERVISOR (virtual machine/container) servers.",
+				"This is IN ADDITION to the generic-server configuration, so",
+				"make sure to include scheduled jobs for BOTH configutaions or",
+				"combine both configurations into a single file.",
+				"",
+				"The VM / Container images in a hypervisor server may contain just",
+				"about anything, and so might need more frequet snapshots than a",
+				"generic server would. Adjust the snapshot schedule below as your",
+				"needs dictate."],
+	"jobs": [
+		{
+			"comment": ["HYPERVISOR Take snapshots hourly.",
+						"Keep 48 of these hourly snapshots (approximately 2 days",
+						"worth of snapshots for an always-on server). Individual",
+						"VM and container images may likely be separate zfs ZVOLs",
+						"or datasets, so make sure to recursively include children."],
+			"dataset": "zhypervisor/HYPERVISOR/hypervisor",
+			"recursive":true,
+			"prefix": "HOUR_____",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"*"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":48}
+		},
+		{
+			"comment": ["HYPERVISOR Take snapshots daily.",
+						"Keep 8 of these daily snapshots (approximately 1 week",
+						"worth of snapshots for an always-on server)."],
+			"dataset": "zhypervisor/HYPERVISOR/hypervisor",
+			"recursive":true,
+			"prefix": "DAY______",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"0"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":8}
+		}
+	]
+}

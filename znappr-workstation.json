@@ -1,0 +1,169 @@
+{
+	"comment":["Znappr configuration for Generic Workstations.",
+				"",
+				"User's home directories change frequently and it's probably",
+				"quite reasonable to make snapshots at 15 minute intervals",
+				"for users. The rest of a workstation has snapshot requirements",
+				"similar to generic servers."],
+	"jobs": [
+		{
+			"comment": ["HOME Take snapshots at 15, 30, and 45 minutes past the hour.",
+						"Keep 72 of these 15-minute snapshots (approximately 24 hours",
+						"worth of snapshots for an always-on workstation)."],
+			"dataset": "zroot/home",
+			"recursive":true,
+			"prefix": "QUARTER__",
+			"postfix": "",
+			"pre_date": false,
+			"date_format":"%Y-%m-%d-%H:%M",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "15,30,45"
+				},
+				{
+					"field":"hour",
+					"value":"*"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":72}
+		},
+		{
+			"comment": ["HOME Take snapshots hourly.",
+						"Keep 168 of these hourly snapshots (approximately 1 week",
+						"worth of snapshots for an always-on workstation)."],
+			"dataset": "zroot/home",
+			"recursive":true,
+			"prefix": "HOUR_____",
+			"postfix": "",
+			"pre_date": false,
+			"date_format":"%Y-%m-%d-%H:00",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"*"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":168}
+		},
+		{
+			"comment": ["HOME Take snapshots weekly.",
+						"Keep 9 of these weekly snapshots (approximately 2 months",
+						"worth of snapshots for an always-on workstation)."],
+			"dataset": "zroot/home",
+			"recursive":true,
+			"prefix": "WEEK_____",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"0"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"1"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":9}
+		},
+		{
+			"comment": ["ROOT Take snapshots daily.",
+				"Keep 8 of these daily snapshots (approximately 1 week",
+				"worth of snapshots for an always-on workstation).",
+				"DO NOT INCLUDE CHILD DATASETS (recursive field) as",
+				"/home already has separate jobs defined previously",
+				"in this config."],
+			"dataset": "zroot/ROOT/root",
+			"recursive":false,
+			"prefix": "DAY______",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"0"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":8}
+		}
+	]
+}

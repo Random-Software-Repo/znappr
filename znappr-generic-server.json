@@ -1,0 +1,55 @@
+{
+	"comment":["Znappr configuration for Generic Servers.",
+				"This configuration file is only for the root (base-os)",
+				"dataset for generic servers.",
+				"Application specific snapshotting is handled with",
+				"application specific configuration files (such as the",
+				"examples provided for hypervisor or nas servers).",
+				"",
+				"A generic server's root / os dataset is not expected to",
+				"changed dramatically on more often than a daily basis, and",
+				"so only daily snapshots are made."],
+	"jobs": [
+		{
+			"comment": ["ROOT Take snapshots daily.",
+				"Keep 8 of these daily snapshots (approximately 1 week",
+				"worth of snapshots for an always-on server).",
+				"Recursively include child datasets as no specific.",
+				"jobs for child datases are defined for servers."],
+			"dataset": "zroot/ROOT/root",
+			"recursive":true,
+			"prefix": "DAY______",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"0"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":8}
+		}
+	]
+}

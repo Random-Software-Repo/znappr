@@ -1,0 +1,96 @@
+{
+	"comment":["Znappr configuration for NAS (network-attached-storage) servers.",
+				"This is IN ADDITION to the generic-server configuration, so",
+				"make sure to include scheduled jobs for BOTH configutaions or",
+				"combine both configurations into a single file.",
+				"",
+				"A NAS server is expected to contain USER data that can change",
+				"frequently. Users may need to restore file more often than",
+				"other scenarios. To support this, NAS snapshot schedules will",
+				"include hourly snapshots for a week. In your specific use-case,"
+				"more frequent snapshots may be required (such as every 15-minutes",
+				"as seen in then workstation config for /home."],
+	"jobs": [
+		{
+			"comment": ["NAS Take snapshots hourly.",
+					"Keep 168 of these hourly snapshots (approximately 1 week",
+					"worth of snapshots for an always-on server).",
+					"Make sure to recusively include child datasets as a NAS",
+					"will, probably, have many child datasets (and zvols) that",
+					"you will, undoubtedly, want to snapshot as well."],
+			"dataset": "znas/NAS/nas",
+			"recursive":true,
+			"prefix": "HOUR_____",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"*"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"*"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":168}
+		},
+		{
+			"comment": ["NAS Take snapshots weekly.",
+						"Keep 9 of these weekly snapshots (approximately 2 months",
+						"worth of snapshots for an always-on server)."],
+			"dataset": "znas/NAS/nas",
+			"recursive":true,
+			"prefix": "WEEK_____",
+			"postfix": "",
+			"pre_date": true,
+			"date_format":"%Y-%m-%d",
+			"whens":
+			[
+				{
+					"field": "minute",
+					"value": "0"
+				},
+				{
+					"field":"hour",
+					"value":"0"
+				},
+				{
+					"field":"day",
+					"value":"*"
+				},
+				{
+					"field":"day_of_week",
+					"value":"1"
+				},
+				{
+					"field":"day_of_year",
+					"value":"*"
+				},
+				{
+					"field":"month",
+					"value":"*"
+				}
+			],
+			"purge_rule": {"unit":"count", "value":9}
+		}
+	]
+}
